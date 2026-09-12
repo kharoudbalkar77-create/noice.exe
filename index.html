@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>noice.exe // Autonomous Scenario & Risk Intelligence Engine</title>
-    <!-- Chart.js CDN for visual wow factor -->
+    <title>noice.exe // Autonomous Scenario & Intelligence Engine</title>
+    <!-- Chart.js CDN for live graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-dark: #07090e;
-            --panel-bg: rgba(18, 24, 38, 0.75);
+            --panel-bg: rgba(18, 24, 38, 0.8);
             --accent-cyan: #00f2fe;
-            --accent-glow: rgba(0, 242, 254, 0.3);
+            --accent-glow: rgba(0, 242, 254, 0.35);
             --accent-purple: #7928ca;
             --danger: #ff0055;
             --warning: #ffb703;
@@ -54,7 +54,7 @@
             position: relative;
             z-index: 10;
             height: 60px;
-            background: rgba(10, 14, 23, 0.8);
+            background: rgba(10, 14, 23, 0.85);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -68,7 +68,7 @@
             align-items: center;
             gap: 12px;
             font-weight: 800;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             letter-spacing: 1.5px;
             background: linear-gradient(135deg, #00f2fe, #7928ca);
             -webkit-background-clip: text;
@@ -96,7 +96,6 @@
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
-            letter-spacing: 0.5px;
         }
 
         .pulse-dot {
@@ -114,13 +113,13 @@
             100% { transform: scale(0.95); opacity: 0.8; }
         }
 
-        /* Main Workspace */
+        /* Grid Layout */
         .grid-container {
             position: relative;
             z-index: 10;
             flex: 1;
             display: grid;
-            grid-template-columns: 320px 1fr 340px;
+            grid-template-columns: 340px 1fr 340px;
             gap: 16px;
             padding: 16px;
             overflow: hidden;
@@ -131,106 +130,107 @@
             backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 20px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         .panel-header {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1.2px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        /* Scenario Selectors */
-        .scenario-card {
+        /* Modules / Scenarios */
+        .module-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 14px;
-            margin-bottom: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
         }
 
-        .scenario-card:hover {
+        .module-card:hover {
             border-color: var(--accent-cyan);
             background: rgba(0, 242, 254, 0.05);
             transform: translateY(-2px);
         }
 
-        .scenario-card.active {
+        .module-card.active {
             border-color: var(--accent-cyan);
             background: rgba(0, 242, 254, 0.08);
             box-shadow: 0 0 16px var(--accent-glow);
         }
 
-        .scenario-title {
-            font-size: 0.95rem;
+        .module-title {
+            font-size: 0.9rem;
             font-weight: 600;
             color: #fff;
-            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
         }
 
-        .scenario-desc {
-            font-size: 0.8rem;
+        .module-desc {
+            font-size: 0.75rem;
             color: var(--text-muted);
-            line-height: 1.3;
+            margin-top: 4px;
         }
 
-        /* Metric Cards */
+        /* Metrics Display */
         .metrics-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 14px;
         }
 
         .metric-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
         }
 
         .metric-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
             font-weight: 600;
             text-transform: uppercase;
         }
 
         .metric-value {
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: 800;
-            margin-top: 4px;
+            margin-top: 2px;
             color: var(--accent-cyan);
         }
 
-        /* Chart Canvas Holder */
+        /* Chart Canvas */
         .chart-container {
             flex: 1;
-            min-height: 200px;
+            min-height: 180px;
             position: relative;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
-        /* Live Terminal Output */
+        /* Terminal Output */
         .terminal {
             background: #030712;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 14px;
+            padding: 12px;
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: #38bdf8;
             height: 140px;
             overflow-y: auto;
@@ -238,61 +238,99 @@
         }
 
         .terminal-line {
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             opacity: 0;
-            animation: fadeIn 0.3s forwards;
+            animation: fadeIn 0.25s forwards;
         }
 
-        @keyframes fadeIn {
-            to { opacity: 1; }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* Progress Bar */
+        .progress-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
         }
 
-        /* Interactive Controls */
-        .slider-group {
-            margin-bottom: 16px;
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00f2fe, #00f5d4);
+            transition: width 0.3s ease;
         }
 
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            margin-bottom: 6px;
-            color: var(--text-muted);
-        }
-
-        input[type=range] {
-            width: 100%;
-            accent-color: var(--accent-cyan);
+        /* Interactive Action Buttons */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .btn {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 6px;
             border: none;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             cursor: pointer;
             letter-spacing: 0.5px;
             transition: all 0.2s;
-            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .btn-cyan {
+            background: rgba(0, 242, 254, 0.15);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .btn-cyan:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .btn-purple {
+            background: rgba(121, 40, 202, 0.2);
+            border: 1px solid var(--accent-purple);
+            color: #d8b4fe;
+        }
+
+        .btn-purple:hover {
+            background: var(--accent-purple);
+            color: #fff;
         }
 
         .btn-primary {
+            width: 100%;
+            padding: 12px;
             background: linear-gradient(135deg, #00f2fe, #4facfe);
             color: #000;
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+            font-weight: 800;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
         }
 
         .btn-primary:hover {
-            box-shadow: 0 0 25px rgba(0, 242, 254, 0.6);
-            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+            transform: scale(1.01);
         }
 
         .btn-danger {
+            width: 100%;
+            padding: 10px;
             background: rgba(255, 0, 85, 0.15);
             border: 1px solid var(--danger);
             color: var(--danger);
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
         .btn-danger:hover {
@@ -309,55 +347,73 @@
     <header>
         <div class="brand">
             <span>noice.exe</span>
-            <span class="brand-badge">CORE v2.4</span>
+            <span class="brand-badge">CORE v3.0</span>
         </div>
         <div class="status-pill">
             <div class="pulse-dot"></div>
-            <span>noice.exe ENGINE ONLINE</span>
+            <span id="system-status">noice.exe PIPELINE READY</span>
         </div>
     </header>
 
     <div class="grid-container">
-        <!-- Panel 1: Scenarios -->
+        <!-- Left Panel: Engine Pipelines -->
         <div class="panel">
             <div class="panel-header">
-                <span>Scenario Models</span>
+                <span>Core Modules</span>
             </div>
-            <div id="scenarios-list">
-                <div class="scenario-card active" onclick="switchScenario(0, this)">
-                    <div class="scenario-title">Scenario A: High Capacity Stress</div>
-                    <div class="scenario-desc">Simulates system load spikes and evaluates automated balance cycles.</div>
+            
+            <div class="module-card active" onclick="selectModule('ocr', this)">
+                <div class="module-title">
+                    <span>1. Optical Character Recognition</span>
+                    <span style="color: var(--accent-cyan)">[OCR]</span>
                 </div>
-                <div class="scenario-card" onclick="switchScenario(1, this)">
-                    <div class="scenario-title">Scenario B: Risk Mitigation Pass</div>
-                    <div class="scenario-desc">Evaluates secondary protocol deployment under sudden variance.</div>
+                <div class="module-desc">Extracts structured data and verifies doc authenticity.</div>
+            </div>
+
+            <div class="module-card" onclick="selectModule('fft', this)">
+                <div class="module-title">
+                    <span>2. FFT Signal Frequency</span>
+                    <span style="color: #c084fc">[FFT]</span>
                 </div>
-                <div class="scenario-card" onclick="switchScenario(2, this)">
-                    <div class="scenario-title">Scenario C: Efficiency Optimization</div>
-                    <div class="scenario-desc">Reallocates dynamic resources to maximize output performance.</div>
+                <div class="module-desc">Fast Fourier Transform for spectral noise & fraud analysis.</div>
+            </div>
+
+            <div class="module-card" onclick="selectModule('liveness', this)">
+                <div class="module-title">
+                    <span>3. Biometric Liveness Check</span>
+                    <span style="color: var(--success)">[LIVENESS]</span>
                 </div>
+                <div class="module-desc">Facial landmark depth mapping & anti-spoofing detector.</div>
+            </div>
+
+            <div class="module-card" onclick="selectModule('elf', this)">
+                <div class="module-title">
+                    <span>4. ELF Binary Inspection</span>
+                    <span style="color: var(--warning)">[ELF]</span>
+                </div>
+                <div class="module-desc">Parses Executable & Linkable Format headers & sections.</div>
             </div>
         </div>
 
-        <!-- Panel 2: Live Graph & Analytics -->
+        <!-- Center Panel: Telemetry & Visual Graph -->
         <div class="panel">
             <div class="panel-header">
-                <span>Predictive Telemetry</span>
-                <span id="scenario-tag" style="color: var(--accent-cyan); font-weight: 600;">[SCENARIO A] via noice.exe</span>
+                <span>Live Predictive Telemetry</span>
+                <span id="active-tag" style="color: var(--accent-cyan); font-weight: 600;">[OCR ENGINE]</span>
             </div>
 
             <div class="metrics-row">
                 <div class="metric-card">
                     <div class="metric-label">Confidence</div>
-                    <div class="metric-value" id="val-confidence">96.4%</div>
+                    <div class="metric-value" id="val-confidence">98.2%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Risk Rating</div>
+                    <div class="metric-label">Risk Score</div>
                     <div class="metric-value" id="val-risk" style="color: var(--success);">LOW</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Latency Impact</div>
-                    <div class="metric-value" id="val-latency">14ms</div>
+                    <div class="metric-label">Processing Time</div>
+                    <div class="metric-value" id="val-latency">12ms</div>
                 </div>
             </div>
 
@@ -365,34 +421,44 @@
                 <canvas id="telemetryChart"></canvas>
             </div>
 
-            <div class="panel-header" style="margin-bottom: 8px;">noice.exe Terminal Stream</div>
+            <div class="panel-header" style="margin-bottom: 6px;">Pipeline Progress</div>
+            <div class="progress-box">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="panel-header" style="margin-bottom: 6px;">noice.exe Terminal Stream</div>
             <div class="terminal" id="terminal-log">
-                <div class="terminal-line">> [noice.exe] System initialized. Telemetry stream locked.</div>
-                <div class="terminal-line">> Waiting for scenario command input...</div>
+                <div class="terminal-line">> [noice.exe] System initialized. Interactive modules attached.</div>
+                <div class="terminal-line">> Select a module or trigger actions to test pipeline execution.</div>
             </div>
         </div>
 
-        <!-- Panel 3: Controls -->
+        <!-- Right Panel: Interactive Actions -->
         <div class="panel">
             <div class="panel-header">
-                <span>Interactive Controls</span>
+                <span>Interactive Triggers</span>
             </div>
 
-            <div class="slider-group">
-                <div class="slider-header">
-                    <span>Stress Level Impact</span>
-                    <span id="slider-val">50%</span>
-                </div>
-                <input type="range" id="stress-slider" min="10" max="100" value="50" oninput="updateStress(this.value)">
+            <div class="btn-grid">
+                <button class="btn btn-cyan" onclick="runOCR()">EXECUTE OCR</button>
+                <button class="btn btn-purple" onclick="runFFT()">RUN FFT SPECTRUM</button>
+                <button class="btn btn-cyan" onclick="runLiveness()">CHECK LIVENESS</button>
+                <button class="btn btn-purple" onclick="parseELF()">PARSE ELF HEADER</button>
             </div>
 
-            <button class="btn btn-primary" onclick="runSimulation()">RUN SIMULATION</button>
-            <button class="btn btn-danger" onclick="triggerOverride()">TRIGGER OVERRIDE</button>
+            <div style="border-top: 1px solid var(--border); margin: 12px 0;"></div>
+
+            <div class="panel-header">
+                <span>Global Engine Control</span>
+            </div>
+
+            <button class="btn btn-primary" onclick="runFullPipeline()">RUN FULL PIPELINE</button>
+            <button class="btn btn-danger" onclick="triggerSecurityOverride()">SECURITY OVERRIDE</button>
         </div>
     </div>
 
     <script>
-        // Audio Synthesizer for Sound FX
+        // Web Audio Synthesizer
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, type="sine", duration=0.1) {
             try {
@@ -400,7 +466,7 @@
                 const gain = audioCtx.createGain();
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -409,7 +475,7 @@
             } catch(e){}
         }
 
-        // Particle Background
+        // Canvas Particles
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -421,7 +487,7 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        for(let i=0; i<40; i++) {
+        for(let i=0; i<35; i++) {
             particles.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
@@ -447,63 +513,56 @@
         }
         drawParticles();
 
-        // Data & Chart Setup
-        const scenarioData = [
-            {
-                tag: "[SCENARIO A: CAPACITY STRESS] via noice.exe",
-                confidence: "96.4%",
+        // Data for Modules
+        const modulePresets = {
+            ocr: {
+                tag: "[OCR ENGINE] via noice.exe",
+                confidence: "98.2%",
                 risk: "LOW",
                 riskColor: "var(--success)",
-                latency: "14ms",
-                chartData: [20, 45, 30, 80, 60, 95, 40],
-                logs: [
-                    "> [noice.exe] Loaded Scenario A model parameters.",
-                    "> System Load Capacity analyzed: Stable.",
-                    "> Recommendation: Deploy automated dynamic balancing."
-                ]
+                latency: "12ms",
+                chartData: [30, 75, 45, 90, 85, 95, 60]
             },
-            {
-                tag: "[SCENARIO B: RISK MITIGATION] via noice.exe",
-                confidence: "82.1%",
-                risk: "MEDIUM",
-                riskColor: "var(--warning)",
-                latency: "38ms",
-                chartData: [40, 65, 85, 50, 90, 75, 60],
-                logs: [
-                    "> [noice.exe] Loaded Scenario B model parameters.",
-                    "> Anomaly variance threshold hit: 18%.",
-                    "> Recommendation: Activate contingency routing."
-                ]
-            },
-            {
-                tag: "[SCENARIO C: OPTIMIZATION] via noice.exe",
-                confidence: "99.1%",
-                risk: "OPTIMAL",
+            fft: {
+                tag: "[FFT FREQUENCY ANALYZER]",
+                confidence: "94.7%",
+                risk: "STABLE",
                 riskColor: "var(--accent-cyan)",
                 latency: "8ms",
-                chartData: [10, 25, 35, 40, 50, 70, 95],
-                logs: [
-                    "> [noice.exe] Loaded Scenario C model parameters.",
-                    "> Throughput efficiency baseline evaluated.",
-                    "> Recommendation: Reallocate idle nodes to core engine."
-                ]
+                chartData: [15, 80, 20, 95, 10, 85, 30]
+            },
+            liveness: {
+                tag: "[BIOMETRIC LIVENESS DETECTOR]",
+                confidence: "99.4%",
+                risk: "VERIFIED",
+                riskColor: "var(--success)",
+                latency: "18ms",
+                chartData: [50, 60, 70, 85, 90, 98, 99]
+            },
+            elf: {
+                tag: "[ELF BINARY PARSER]",
+                confidence: "100%",
+                risk: "CLEAN",
+                riskColor: "var(--accent-cyan)",
+                latency: "4ms",
+                chartData: [88, 88, 90, 85, 92, 90, 95]
             }
-        ];
+        };
 
-        let currentScenario = 0;
+        // Chart Setup
         const chartCtx = document.getElementById('telemetryChart').getContext('2d');
         const telemetryChart = new Chart(chartCtx, {
             type: 'line',
             data: {
-                labels: ['T-6', 'T-5', 'T-4', 'T-3', 'T-2', 'T-1', 'Now'],
+                labels: ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4', 'Stage 5', 'Stage 6', 'Output'],
                 datasets: [{
-                    label: 'noice.exe Telemetry',
-                    data: scenarioData[0].chartData,
+                    label: 'Signal Amplitude / Data Telemetry',
+                    data: modulePresets.ocr.chartData,
                     borderColor: '#00f2fe',
                     backgroundColor: 'rgba(0, 242, 254, 0.08)',
                     borderWidth: 2,
                     fill: true,
-                    tension: 0.4
+                    tension: 0.35
                 }]
             },
             options: {
@@ -511,66 +570,126 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } }
                 }
             }
         });
 
-        // Interactivity Functions
-        function switchScenario(index, element) {
+        // UI Handlers
+        function logToTerminal(msg, color="#38bdf8") {
+            const terminal = document.getElementById('terminal-log');
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.style.color = color;
+            line.innerText = msg;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function setProgress(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+
+        function selectModule(key, element) {
             playSound(440, "sine", 0.08);
-            document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.module-card').forEach(c => c.classList.remove('active'));
             element.classList.add('active');
+
+            const preset = modulePresets[key];
+            document.getElementById('active-tag').innerText = preset.tag;
+            document.getElementById('val-confidence').innerText = preset.confidence;
+            document.getElementById('val-risk').innerText = preset.risk;
+            document.getElementById('val-risk').style.color = preset.riskColor;
+            document.getElementById('val-latency').innerText = preset.latency;
+
+            telemetryChart.data.datasets[0].data = preset.chartData;
+            telemetryChart.update();
+
+            logToTerminal(`> Switched focus to ${preset.tag}`);
+        }
+
+        // Interactive Feature Functions
+        function runOCR() {
+            playSound(600, "triangle", 0.12);
+            setProgress(30);
+            logToTerminal(`> [OCR] Scanning input document matrix...`, "#00f2fe");
+            setTimeout(() => {
+                setProgress(80);
+                logToTerminal(`> [OCR] Text blocks isolated. Applying binarization filter...`);
+            }, 300);
+            setTimeout(() => {
+                setProgress(100);
+                logToTerminal(`> [OCR] SUCCESS: Extracted Key Tokens [ID_HASH: 0x9F4A, STATUS: AUTHENTIC]`, "#00f5d4");
+            }, 600);
+        }
+
+        function runFFT() {
+            playSound(520, "sine", 0.15);
+            setProgress(25);
+            logToTerminal(`> [FFT] Sampling signal input at 44.1kHz...`, "#c084fc");
+            setTimeout(() => {
+                setProgress(70);
+                telemetryChart.data.datasets[0].data = [10, 95, 5, 88, 12, 92, 18];
+                telemetryChart.update();
+                logToTerminal(`> [FFT] Frequency spectrum transformed. Harmonic peak: 1.2 kHz.`);
+            }, 350);
+            setTimeout(() => {
+                setProgress(100);
+                logToTerminal(`> [FFT] SUCCESS: No synthetic noise anomalies detected.`, "#00f5d4");
+            }, 700);
+        }
+
+        function runLiveness() {
+            playSound(700, "sine", 0.1);
+            setProgress(40);
+            logToTerminal(`> [LIVENESS] Mapping 68 facial landmark coordinates...`, "#00f5d4");
+            setTimeout(() => {
+                setProgress(85);
+                logToTerminal(`> [LIVENESS] Micro-expression & depth variance confirmed...`);
+            }, 400);
+            setTimeout(() => {
+                setProgress(100);
+                logToTerminal(`> [LIVENESS] SUCCESS: Real human live presence verified (99.4%)`, "#00f5d4");
+            }, 750);
+        }
+
+        function parseELF() {
+            playSound(350, "square", 0.1);
+            setProgress(35);
+            logToTerminal(`> [ELF] Reading binary header magic bytes [0x7F 'E' 'L' 'F']...`, "#ffb703");
+            setTimeout(() => {
+                setProgress(75);
+                logToTerminal(`> [ELF] Class: ELF64 | Machine: x86-64 | Sections: .text, .rodata, .bss parsed.`);
+            }, 350);
+            setTimeout(() => {
+                setProgress(100);
+                logToTerminal(`> [ELF] SUCCESS: Binary structure intact. No payload tampering detected.`, "#00f5d4");
+            }, 650);
+        }
+
+        function runFullPipeline() {
+            playSound(880, "triangle", 0.2);
+            logToTerminal(`> [noice.exe PIPELINE] Initiating end-to-end execution...`, "#00f2fe");
+            setProgress(10);
             
-            currentScenario = index;
-            const data = scenarioData[index];
-
-            document.getElementById('scenario-tag').innerText = data.tag;
-            document.getElementById('val-confidence').innerText = data.confidence;
-            document.getElementById('val-risk').innerText = data.risk;
-            document.getElementById('val-risk').style.color = data.riskColor;
-            document.getElementById('val-latency').innerText = data.latency;
-
-            telemetryChart.data.datasets[0].data = data.chartData;
-            telemetryChart.update();
-
-            const terminal = document.getElementById('terminal-log');
-            data.logs.forEach(log => {
-                const line = document.createElement('div');
-                line.className = 'terminal-line';
-                line.innerText = log;
-                terminal.appendChild(line);
-            });
-            terminal.scrollTop = terminal.scrollHeight;
+            setTimeout(() => { runOCR(); }, 200);
+            setTimeout(() => { runFFT(); }, 900);
+            setTimeout(() => { runLiveness(); }, 1600);
+            setTimeout(() => { parseELF(); }, 2300);
+            
+            setTimeout(() => {
+                logToTerminal(`> [noice.exe PIPELINE] ALL MODULES EXECUTED SUCCESSFULLY. RESULT: VALIDATED.`, "#00f5d4");
+            }, 3100);
         }
 
-        function updateStress(val) {
-            document.getElementById('slider-val').innerText = val + '%';
-            telemetryChart.data.datasets[0].data = telemetryChart.data.datasets[0].data.map(v => Math.min(100, Math.max(10, v + (val - 50) / 5)));
-            telemetryChart.update();
-        }
-
-        function runSimulation() {
-            playSound(880, "triangle", 0.15);
-            const terminal = document.getElementById('terminal-log');
-            const line = document.createElement('div');
-            line.className = 'terminal-line';
-            line.style.color = '#00f5d4';
-            line.innerText = `> [noice.exe RUN] Processing parameters... State Verified OK.`;
-            terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        function triggerOverride() {
-            playSound(150, "sawtooth", 0.3);
-            const terminal = document.getElementById('terminal-log');
-            const line = document.createElement('div');
-            line.className = 'terminal-line';
-            line.style.color = '#ff0055';
-            line.innerText = `> [noice.exe OVERRIDE] Threshold bypassed. Manual control locked.`;
-            terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
+        function triggerSecurityOverride() {
+            playSound(180, "sawtooth", 0.35);
+            setProgress(100);
+            logToTerminal(`> [noice.exe OVERRIDE] EMERGENCY LOCKDOWN TRIGGERED!`, "#ff0055");
+            logToTerminal(`> Threat mitigation sub-routines engaged on all channels.`, "#ff0055");
+            document.getElementById('system-status').innerText = "OVERRIDE ENGAGED";
+            document.getElementById('system-status').style.color = "var(--danger)";
         }
     </script>
 </body>
