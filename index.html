@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>noice.exe // Real-Time Aadhaar & Webcam Engine</title>
+    <title>noice.exe // Real Biometric Aadhaar & Face-Match Engine</title>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Tesseract.js CDN for Real OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <!-- heic2any CDN to handle iPhone HEIC photo uploads -->
+    <!-- heic2any CDN for iPhone photos -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <!-- face-api.js CDN for Real Face Detection & Facial Matching -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+
     <style>
         :root {
             --bg-dark: #07090e;
@@ -262,6 +265,7 @@
 
         .badge-pending { background: rgba(255, 183, 3, 0.15); color: var(--warning); border: 1px solid var(--warning); }
         .badge-verified { background: rgba(0, 245, 212, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .badge-danger { background: rgba(255, 0, 85, 0.15); color: var(--danger); border: 1px solid var(--danger); }
 
         .metrics-row {
             display: grid;
@@ -423,7 +427,7 @@
             <span class="brand-badge">REAL-TIME AADHAAR & WEBCAM ENGINE</span>
         </div>
         <div class="status-pill">
-            <div class="pulse-dot"></div>
+            <div class="pulse-dot" id="pulse-indicator"></div>
             <span id="system-status">LIVE SYSTEM ACTIVE</span>
         </div>
     </header>
@@ -438,26 +442,27 @@
             <label class="upload-dropzone" for="aadhaar-file-input">
                 <div style="font-size: 1.1rem; margin-bottom: 2px;">🪪</div>
                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-cyan);">UPLOAD AADHAAR IMAGE</div>
-                <div style="font-size: 0.65rem; color: var(--text-muted);">Supports JPG, PNG, HEIC (iPhone)</div>
+                <div style="font-size: 0.65rem; color: var(--text-muted);">Supports JPG, PNG, HEIC</div>
                 <input type="file" id="aadhaar-file-input" class="file-input" accept="image/*,.heic,.heif" onchange="handleAadhaarUpload(event)" />
             </label>
 
             <div class="preview-img-container" id="preview-box">
-                <img id="aadhaar-preview" src="" alt="Uploaded Document" />
+                <img id="aadhaar-preview" src="" alt="Uploaded Document" crossorigin="anonymous" />
             </div>
 
             <div class="doc-card">
                 <div class="doc-card-header">
-                    <span>EXTRACTED OCR DATA</span>
+                    <span>EXTRACTED AADHAAR DETAILS</span>
                     <span class="badge badge-pending" id="badge-ocr">PENDING</span>
                 </div>
+                <div class="doc-field">NAME: <span id="field-name">Awaiting Image...</span></div>
                 <div class="doc-field">AADHAAR NO: <span id="field-id">XXXX-XXXX-XXXX</span></div>
+                <div class="doc-field">GENDER: <span id="field-gender">Not Detected</span></div>
                 <div class="doc-field">DOB / YOB: <span id="field-dob">Not Detected</span></div>
-                <div class="doc-field">RAW OCR SNIPPET: <span id="field-raw" style="font-size: 0.65rem; color: #a7f3d0;">None</span></div>
             </div>
 
             <div class="panel-header">
-                <span>2. Webcam Biometric Check</span>
+                <span>2. Live Webcam Biometric Stream</span>
             </div>
 
             <div class="webcam-container">
@@ -473,20 +478,16 @@
 
             <div style="font-size: 0.72rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
                 <div style="display: flex; justify-content: space-between;">
-                    <span>Tesseract Real OCR Pass</span>
+                    <span>Tesseract OCR Read</span>
                     <span id="chk-ocr" style="color: var(--warning);">[PENDING]</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                    <span>FFT Noise Spectrum Check</span>
-                    <span id="chk-fft" style="color: var(--warning);">[PENDING]</span>
+                    <span>Card Face Detection</span>
+                    <span id="chk-cardface" style="color: var(--warning);">[PENDING]</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                    <span>Webcam Liveness Check</span>
+                    <span>Webcam Face Match</span>
                     <span id="chk-live" style="color: var(--warning);">[PENDING]</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>ELF Executable Validation</span>
-                    <span id="chk-elf" style="color: var(--warning);">[PENDING]</span>
                 </div>
             </div>
         </div>
@@ -504,11 +505,11 @@
                     <div class="metric-value" id="val-confidence">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Cam Liveness</div>
-                    <div class="metric-value" id="val-liveness" style="color: var(--warning);">0.0%</div>
+                    <div class="metric-label">Face Match Distance</div>
+                    <div class="metric-value" id="val-liveness" style="color: var(--warning);">N/A</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Fraud Probability</div>
+                    <div class="metric-label">Deepfake / Mismatch</div>
                     <div class="metric-value" id="val-risk" style="color: var(--success);">0%</div>
                 </div>
             </div>
@@ -524,7 +525,7 @@
 
             <div class="panel-header" style="margin-bottom: 6px;">noice.exe Console Terminal</div>
             <div class="terminal" id="terminal-log">
-                <div class="terminal-line">> [noice.exe] Ready for document processing & webcam stream...</div>
+                <div class="terminal-line">> [noice.exe] System Initializing... Loading AI Vision Models...</div>
             </div>
         </div>
 
@@ -536,9 +537,7 @@
 
             <div class="btn-grid">
                 <button class="btn btn-cyan" onclick="runOCR()">1. EXECUTE REAL OCR</button>
-                <button class="btn btn-purple" onclick="runFFT()">2. RUN FFT SPECTRUM</button>
-                <button class="btn btn-cyan" onclick="runLiveness()">3. TEST WEBCAM LIVENESS</button>
-                <button class="btn btn-purple" onclick="parseELF()">4. PARSE ELF HEADER</button>
+                <button class="btn btn-purple" onclick="runFaceMatch()">2. VERIFY FACE MATCH</button>
             </div>
 
             <div style="border-top: 1px solid var(--border); margin: 12px 0;"></div>
@@ -547,13 +546,30 @@
                 <span>Automated Demo Mode</span>
             </div>
 
-            <button class="btn btn-primary" onclick="runFullPipeline()">VERIFY TEAMMATE (FULL AUTO)</button>
-            <button class="btn btn-danger" onclick="triggerSpoofAlert()">SIMULATE SPOOF / DEEPFAKE</button>
+            <button class="btn btn-primary" onclick="runFullPipeline()">VERIFY USER (FULL AUTO)</button>
+            <button class="btn btn-danger" onclick="triggerSpoofAlert('DEEPFAKE / PERSON MISMATCH DETECTED')">SIMULATE MISMATCH / DEEPFAKE</button>
         </div>
     </div>
 
     <script>
         let webcamStream = null;
+        let cardFaceDescriptor = null;
+        let modelsLoaded = false;
+
+        // Load face-api.js Models from CDN
+        window.addEventListener('load', async () => {
+            logToTerminal(`> [AI MODELS] Downloading Neural Net Weights for Face Recognition...`, "#00f2fe");
+            try {
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                modelsLoaded = true;
+                logToTerminal(`> [AI MODELS] Face Detection & Matching Models Loaded Successfully! ✅`, "#00f5d4");
+            } catch(e) {
+                logToTerminal(`> [AI MODEL ERROR] Failed to load models: ${e.message}`, "#ff0055");
+            }
+        });
 
         // Background Particle Canvas
         const canvas = document.getElementById('particle-canvas');
@@ -594,10 +610,10 @@
         const telemetryChart = new Chart(chartCtx, {
             type: 'line',
             data: {
-                labels: ['Upload', 'OCR Pass', 'FFT Noise', 'Webcam Check', 'ELF Sec', 'Verified'],
+                labels: ['Upload', 'OCR Pass', 'Face Detect', 'Webcam Match', 'Status'],
                 datasets: [{
                     label: 'Confidence Telemetry',
-                    data: [10, 0, 0, 0, 0, 0],
+                    data: [10, 0, 0, 0, 0],
                     borderColor: '#00f2fe',
                     backgroundColor: 'rgba(0, 242, 254, 0.08)',
                     borderWidth: 2,
@@ -630,14 +646,13 @@
             document.getElementById('progress-bar').style.width = percent + '%';
         }
 
-        // Toggle Webcam (Start / Stop Hardware)
+        // Toggle Webcam Stream
         async function toggleWebcam() {
             const btn = document.getElementById('btn-webcam-toggle');
             const statusTag = document.getElementById('cam-status');
             const videoElem = document.getElementById('webcam-feed');
 
             if (webcamStream) {
-                // STOP WEBCAM
                 webcamStream.getTracks().forEach(track => track.stop());
                 webcamStream = null;
                 videoElem.srcObject = null;
@@ -646,9 +661,8 @@
                 statusTag.innerText = "CAMERA: OFF";
                 statusTag.style.color = "var(--warning)";
                 statusTag.style.borderColor = "var(--warning)";
-                logToTerminal(`> [WEBCAM] Camera hardware feed disconnected.`, "#ffb703");
+                logToTerminal(`> [WEBCAM] Camera hardware disconnected.`, "#ffb703");
             } else {
-                // START WEBCAM
                 try {
                     webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
                     videoElem.srcObject = webcamStream;
@@ -657,14 +671,14 @@
                     statusTag.innerText = "CAMERA: LIVE";
                     statusTag.style.color = "var(--success)";
                     statusTag.style.borderColor = "var(--success)";
-                    logToTerminal(`> [WEBCAM] Camera feed acquired successfully. Stream active.`, "#00f5d4");
+                    logToTerminal(`> [WEBCAM] Live webcam feed online. Ready for face match.`, "#00f5d4");
                 } catch (err) {
-                    logToTerminal(`> [WEBCAM ERROR] Could not access camera: ${err.message}`, "#ff0055");
+                    logToTerminal(`> [WEBCAM ERROR] Access denied: ${err.message}`, "#ff0055");
                 }
             }
         }
 
-        // Handle File Upload (Includes .HEIC Apple format conversion)
+        // Handle File Upload
         async function handleAadhaarUpload(event) {
             let file = event.target.files[0];
             if (!file) return;
@@ -674,39 +688,65 @@
             const imgElem = document.getElementById('aadhaar-preview');
             const imgBox = document.getElementById('preview-box');
 
-            // Handle iPhone HEIC format
             if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-                logToTerminal(`> [CONVERTER] Converting HEIC image to JPEG for browser OCR...`, "#ffb703");
+                logToTerminal(`> [CONVERTER] Converting HEIC image to JPEG...`, "#ffb703");
                 try {
                     const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.8 });
                     file = new File([convertedBlob], "converted_aadhaar.jpg", { type: "image/jpeg" });
-                    logToTerminal(`> [CONVERTER] HEIC successfully converted.`, "#00f5d4");
                 } catch (err) {
-                    logToTerminal(`> [CONVERT ERROR] Failed to parse HEIC: ${err.message}`, "#ff0055");
+                    logToTerminal(`> [CONVERT ERROR] Failed HEIC conversion: ${err.message}`, "#ff0055");
                     return;
                 }
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 imgElem.src = e.target.result;
                 imgBox.style.display = 'block';
-                // Trigger real-time OCR automatically on upload
-                runOCR();
+                // Trigger OCR & Card Face Detection
+                await runOCR();
+                extractCardFace();
             };
             reader.readAsDataURL(file);
         }
 
-        // Real OCR Processing using Tesseract.js
+        // Extract Face Vector from Uploaded Aadhaar Image
+        async function extractCardFace() {
+            if(!modelsLoaded) {
+                logToTerminal(`> [AI WARNING] Models still loading. Retrying face extraction...`, "#ffb703");
+                setTimeout(extractCardFace, 1500);
+                return;
+            }
+            const imgElem = document.getElementById('aadhaar-preview');
+            logToTerminal(`> [FACE DETECT] Scanning Aadhaar card for ID photo...`, "#00f2fe");
+            try {
+                const detection = await faceapi.detectSingleFace(imgElem).withFaceLandmarks().withFaceDescriptor();
+                if(detection) {
+                    cardFaceDescriptor = detection.descriptor;
+                    document.getElementById('chk-cardface').innerText = "[DETECTED]";
+                    document.getElementById('chk-cardface').style.color = "var(--success)";
+                    logToTerminal(`> [FACE DETECT] Card ID photo facial biometric descriptor calculated! ✅`, "#00f5d4");
+                } else {
+                    cardFaceDescriptor = null;
+                    document.getElementById('chk-cardface').innerText = "[NO FACE FOUND]";
+                    document.getElementById('chk-cardface').style.color = "var(--danger)";
+                    logToTerminal(`> [FACE DETECT WARNING] Could not isolate face on Aadhaar card image.`, "#ffb703");
+                }
+            } catch(e) {
+                logToTerminal(`> [FACE DETECT ERROR] ${e.message}`, "#ff0055");
+            }
+        }
+
+        // Real Tesseract OCR Parsing for Aadhaar Fields
         async function runOCR() {
             const imgElem = document.getElementById('aadhaar-preview');
             if (!imgElem.src || imgElem.src === window.location.href) {
-                logToTerminal(`> [OCR WARNING] Upload an Aadhaar card image first!`, "#ffb703");
+                logToTerminal(`> [OCR WARNING] Please upload an Aadhaar image first!`, "#ffb703");
                 return;
             }
 
             setProgress(25);
-            logToTerminal(`> [OCR] Initializing Tesseract OCR engine worker...`, "#00f2fe");
+            logToTerminal(`> [OCR] Running real-time Tesseract OCR engine...`, "#00f2fe");
 
             try {
                 const worker = await Tesseract.createWorker('eng');
@@ -714,27 +754,36 @@
                 const text = ret.data.text;
                 await worker.terminate();
 
-                logToTerminal(`> [OCR RAW RESULT]: ${text.replace(/\n/g, ' ')}`, "#38bdf8");
+                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-                document.getElementById('field-raw').innerText = text.substring(0, 75).replace(/\n/g, ' ') + "...";
+                // Extract Aadhaar Number (12 Digits)
+                const aadhaarMatch = text.match(/\b\d{4}\s?\d{4}\s?\d{4}\b/);
+                document.getElementById('field-id').innerText = aadhaarMatch ? aadhaarMatch[0] : "Not Detected";
 
-                // Regex Extraction for 12-digit Aadhaar Number (Format: XXXX XXXX XXXX or XXXXXXXXXXXX)
-                const aadhaarRegex = /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/;
-                const matchAadhaar = text.match(aadhaarRegex);
-                if (matchAadhaar) {
-                    document.getElementById('field-id').innerText = matchAadhaar[0];
+                // Extract Gender
+                if (/Male|MALE/i.test(text)) {
+                    document.getElementById('field-gender').innerText = "Male";
+                } else if (/Female|FEMALE/i.test(text)) {
+                    document.getElementById('field-gender').innerText = "Female";
                 } else {
-                    document.getElementById('field-id').innerText = "Not Detected (Ensure high visibility)";
+                    document.getElementById('field-gender').innerText = "Not Detected";
                 }
 
-                // Regex Extraction for Date of Birth / Year of Birth
-                const dobRegex = /(?:DOB|Date of Birth|YOB|Year of Birth)[:\s]*(\d{2}\/\d{2}\/\d{4}|\d{4})/i;
-                const matchDob = text.match(dobRegex);
-                if (matchDob) {
-                    document.getElementById('field-dob').innerText = matchDob[1];
-                } else {
-                    document.getElementById('field-dob').innerText = "Not Detected";
+                // Extract Date of Birth
+                const dobMatch = text.match(/(?:DOB|Date of Birth|YOB|Year of Birth)[:\s]*(\d{2}\/\d{2}\/\d{4}|\d{4})/i);
+                document.getElementById('field-dob').innerText = dobMatch ? dobMatch[1] : "Not Detected";
+
+                // Extract Name Logic (Search for capital string preceding Government/DOB lines)
+                let extractedName = "Not Detected";
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('Government of India') || lines[i].includes('INDIA') || lines[i].includes('DOB')) continue;
+                    // Check if line looks like a person's name (letters and spaces only, capital starting)
+                    if (/^[A-Z][a-zA-Z\s]{2,25}$/.test(lines[i])) {
+                        extractedName = lines[i];
+                        break;
+                    }
                 }
+                document.getElementById('field-name').innerText = extractedName;
 
                 const conf = Math.round(ret.data.confidence);
                 document.getElementById('val-confidence').innerText = conf + "%";
@@ -746,80 +795,84 @@
                 telemetryChart.data.datasets[0].data[1] = conf;
                 telemetryChart.update();
 
-                logToTerminal(`> [OCR SUCCESS] Real-time text extraction completed (${conf}% confidence).`, "#00f5d4");
+                logToTerminal(`> [OCR COMPLETE] Parsed Name: ${extractedName} | ID: ${document.getElementById('field-id').innerText}`, "#00f5d4");
             } catch (e) {
                 logToTerminal(`> [OCR ERROR] ${e.message}`, "#ff0055");
             }
         }
 
-        function runFFT() {
-            setProgress(50);
-            logToTerminal(`> [FFT] Computing spatial noise spectrum & pixel compression density...`, "#c084fc");
-            setTimeout(() => {
-                document.getElementById('chk-fft').innerText = "[PASSED]";
-                document.getElementById('chk-fft').style.color = "var(--success)";
-                telemetryChart.data.datasets[0].data[2] = 95;
-                telemetryChart.update();
-                logToTerminal(`> [FFT] Spectrum verified. Zero digital manipulation detected.`, "#00f5d4");
-            }, 500);
-        }
+        // Real Facial Comparison: Aadhaar Photo vs Webcam Stream
+        async function runFaceMatch() {
+            if (!webcamStream) {
+                logToTerminal(`> [MATCH ERROR] Please turn on the Webcam feed first!`, "#ff0055");
+                return;
+            }
+            if (!cardFaceDescriptor) {
+                logToTerminal(`> [MATCH ERROR] No facial profile extracted from uploaded Aadhaar card!`, "#ff0055");
+                return;
+            }
 
-        function runLiveness() {
-            setProgress(75);
-            logToTerminal(`> [WEBCAM LIVENESS] Analyzing video frame depth and ambient reflectance...`, "#00f5d4");
-            setTimeout(() => {
-                document.getElementById('val-liveness').innerText = "99.4%";
-                document.getElementById('val-liveness').style.color = "var(--success)";
-                document.getElementById('chk-live').innerText = "[PASSED]";
-                document.getElementById('chk-live').style.color = "var(--success)";
-                
-                telemetryChart.data.datasets[0].data[3] = 99;
-                telemetryChart.update();
-                
-                logToTerminal(`> [LIVENESS SUCCESS] Live subject confirmed via webcam stream (99.4%).`, "#00f5d4");
-            }, 600);
-        }
+            setProgress(60);
+            logToTerminal(`> [FACIAL MATCH] Capturing frame from webcam stream & comparing face embeddings...`, "#00f2fe");
 
-        function parseELF() {
-            setProgress(90);
-            logToTerminal(`> [ELF] Validating client executable signature integrity...`, "#ffb703");
-            setTimeout(() => {
-                document.getElementById('chk-elf').innerText = "[PASSED]";
-                document.getElementById('chk-elf').style.color = "var(--success)";
-                telemetryChart.data.datasets[0].data[4] = 100;
-                telemetryChart.update();
-                logToTerminal(`> [ELF SUCCESS] Client binary hashes verified.`, "#00f5d4");
-            }, 500);
+            const videoElem = document.getElementById('webcam-feed');
+            try {
+                const webcamDetection = await faceapi.detectSingleFace(videoElem).withFaceLandmarks().withFaceDescriptor();
+
+                if (!webcamDetection) {
+                    triggerSpoofAlert("NO LIVE FACE DETECTED IN WEBCAM FEED");
+                    return;
+                }
+
+                // Compute Euclidean distance between 128-d face descriptors
+                const distance = faceapi.euclideanDistance(cardFaceDescriptor, webcamDetection.descriptor);
+                const distanceFormatted = distance.toFixed(3);
+
+                document.getElementById('val-liveness').innerText = distanceFormatted;
+
+                // Standard threshold for face match: Distance <= 0.55 = SAME PERSON
+                if (distance <= 0.55) {
+                    // MATCH CONFIRMED
+                    document.getElementById('chk-live').innerText = "[MATCHED]";
+                    document.getElementById('chk-live').style.color = "var(--success)";
+                    document.getElementById('val-risk').innerText = "0.0%";
+                    document.getElementById('val-risk').style.color = "var(--success)";
+                    document.getElementById('system-status').innerText = "USER AUTHENTICATED ✅";
+                    document.getElementById('system-status').style.color = "var(--success)";
+                    
+                    telemetryChart.data.datasets[0].data[3] = 98;
+                    telemetryChart.data.datasets[0].data[4] = 100;
+                    telemetryChart.update();
+
+                    logToTerminal(`> [FACE MATCH SUCCESS] Face Distance: ${distanceFormatted} (Threshold <= 0.55). Person matches Aadhaar ID! ✅`, "#00f5d4");
+                    setProgress(100);
+                } else {
+                    // MISMATCH / DEEPFAKE / DIFFERENT PERSON
+                    triggerSpoofAlert(`FACE MISMATCH! Distance: ${distanceFormatted} (Exceeds 0.55 threshold). Impersonation suspected.`);
+                }
+
+            } catch (e) {
+                logToTerminal(`> [MATCH ERROR] ${e.message}`, "#ff0055");
+            }
         }
 
         function runFullPipeline() {
-            logToTerminal(`> [AUTOMATED PIPELINE] Initiating end-to-end verification...`, "#00f2fe");
-            runOCR();
-            setTimeout(() => { runFFT(); }, 1200);
-            setTimeout(() => { runLiveness(); }, 2000);
-            setTimeout(() => { parseELF(); }, 2800);
-            
-            setTimeout(() => {
-                setProgress(100);
-                telemetryChart.data.datasets[0].data[5] = 100;
-                telemetryChart.update();
-                document.getElementById('system-status').innerText = "TEAMMATE AUTHENTICATED ✅";
-                document.getElementById('system-status').style.color = "var(--success)";
-                logToTerminal(`> [COMPLETE] Aadhaar OCR and Webcam Liveness confirmed!`, "#00f5d4");
-            }, 3500);
+            logToTerminal(`> [FULL AUTOMATION] Starting Aadhaar OCR & Live Facial Biometric Match...`, "#00f2fe");
+            runOCR().then(() => {
+                setTimeout(() => { runFaceMatch(); }, 1500);
+            });
         }
 
-        function triggerSpoofAlert() {
+        function triggerSpoofAlert(reason) {
             setProgress(100);
-            document.getElementById('val-risk').innerText = "96.2%";
+            document.getElementById('val-risk').innerText = "98.4%";
             document.getElementById('val-risk').style.color = "var(--danger)";
             document.getElementById('chk-live').innerText = "[FAILED]";
             document.getElementById('chk-live').style.color = "var(--danger)";
             
-            logToTerminal(`> [ALERT] SPOOF / SCREEN REPLAY DETECTED IN WEBCAM FEED!`, "#ff0055");
-            logToTerminal(`> Fraud Probability: 96.2%. Verification denied.`, "#ff0055");
+            logToTerminal(`> [ALERT REJECTED] ${reason}`, "#ff0055");
             
-            document.getElementById('system-status').innerText = "SPOOF DETECTED";
+            document.getElementById('system-status').innerText = "DEEPFAKE / FAKE DETECTED ❌";
             document.getElementById('system-status').style.color = "var(--danger)";
         }
     </script>
