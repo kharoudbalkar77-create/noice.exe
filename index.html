@@ -3,343 +3,563 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Scenario Assessment & Decision Engine</title>
+    <title>NEXUS-X // Autonomous Scenario & Risk Intelligence Engine</title>
+    <!-- Chart.js CDN for visual wow factor -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --panel-bg: #1e293b;
-            --accent: #38bdf8;
-            --accent-glow: rgba(56, 189, 248, 0.2);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --success: #22c55e;
-            --warning: #f59e0b;
+            --bg-dark: #07090e;
+            --panel-bg: rgba(18, 24, 38, 0.75);
+            --accent-cyan: #00f2fe;
+            --accent-glow: rgba(0, 242, 254, 0.3);
+            --accent-purple: #7928ca;
+            --danger: #ff0055;
+            --warning: #ffb703;
+            --success: #00f5d4;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --border: rgba(255, 255, 255, 0.08);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            user-select: none;
         }
 
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            display: flex;
             height: 100vh;
             overflow: hidden;
-        }
-
-        /* Sidebar Navigation */
-        .sidebar {
-            width: 260px;
-            background-color: #0b1120;
-            border-right: 1px solid var(--border);
-            padding: 24px;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Canvas Background */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Top Bar */
+        header {
+            position: relative;
+            z-index: 10;
+            height: 60px;
+            background: rgba(10, 14, 23, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
             justify-content: space-between;
+            padding: 0 24px;
         }
 
         .brand {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .badge {
-            background: rgba(56, 189, 248, 0.1);
-            color: var(--accent);
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 245, 212, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
-        .nav-links {
-            list-style: none;
-            margin-top: 40px;
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 1.5s infinite;
         }
 
-        .nav-item {
-            padding: 12px 16px;
-            border-radius: 8px;
-            color: var(--text-muted);
-            cursor: pointer;
-            margin-bottom: 8px;
-            transition: all 0.2s;
-        }
-
-        .nav-item.active, .nav-item:hover {
-            background-color: var(--panel-bg);
-            color: var(--text-main);
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
         }
 
         /* Main Workspace */
-        .main-content {
+        .grid-container {
+            position: relative;
+            z-index: 10;
             flex: 1;
-            padding: 32px;
-            overflow-y: auto;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
+            grid-template-columns: 320px 1fr 340px;
+            gap: 16px;
+            padding: 16px;
+            overflow: hidden;
         }
 
-        .header {
-            grid-column: span 2;
-            margin-bottom: 8px;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-
-        .header p {
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* Card Panels */
         .panel {
-            background-color: var(--panel-bg);
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+        .panel-header {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
             margin-bottom: 16px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
         }
 
-        /* Scenario Buttons */
+        /* Scenario Selectors */
         .scenario-card {
-            background: #0f172a;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 16px;
+            padding: 14px;
             margin-bottom: 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .scenario-card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
+            border-color: var(--accent-cyan);
+            background: rgba(0, 242, 254, 0.05);
+            transform: translateY(-2px);
         }
 
         .scenario-card.active {
-            border-color: var(--accent);
-            background: rgba(56, 189, 248, 0.05);
+            border-color: var(--accent-cyan);
+            background: rgba(0, 242, 254, 0.08);
+            box-shadow: 0 0 16px var(--accent-glow);
         }
 
-        .scenario-card h4 {
+        .scenario-title {
             font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
             margin-bottom: 4px;
         }
 
-        .scenario-card p {
-            font-size: 0.85rem;
+        .scenario-desc {
+            font-size: 0.8rem;
             color: var(--text-muted);
+            line-height: 1.3;
         }
 
-        /* Results Display */
-        .metric-grid {
+        /* Metric Cards */
+        .metrics-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        .metric-box {
-            background: #0f172a;
-            padding: 16px;
-            border-radius: 8px;
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
             text-align: center;
         }
 
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-top: 4px;
+        .metric-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
-        .output-log {
-            background: #0b1120;
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-top: 4px;
+            color: var(--accent-cyan);
+        }
+
+        /* Chart Canvas Holder */
+        .chart-container {
+            flex: 1;
+            min-height: 200px;
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        /* Live Terminal Output */
+        .terminal {
+            background: #030712;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 16px;
-            font-family: monospace;
-            font-size: 0.85rem;
+            padding: 14px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            height: 140px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Interactive Controls */
+        .slider-group {
+            margin-bottom: 16px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
             color: var(--text-muted);
-            min-height: 180px;
-            line-height: 1.6;
         }
 
-        .btn-action {
+        input[type=range] {
             width: 100%;
-            background: var(--accent);
-            color: #0f172a;
-            font-weight: 600;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 16px;
-            transition: opacity 0.2s;
+            accent-color: var(--accent-cyan);
         }
 
-        .btn-action:hover {
-            opacity: 0.9;
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.6);
+            transform: scale(1.02);
+        }
+
+        .btn-danger {
+            background: rgba(255, 0, 85, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(ff, 0, 85, 0.5);
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div>
-            <div class="brand">
-                <span>⚡ NEXUS AI</span>
-                <span class="badge">PROTOTYPE</span>
-            </div>
-            <ul class="nav-links">
-                <li class="nav-item active">Scenario Modeling</li>
-                <li class="nav-item">Risk Analytics</li>
-                <li class="nav-item">Decision Log</li>
-                <li class="nav-item">Settings</li>
-            </ul>
-        </div>
-        <div style="font-size: 0.8rem; color: var(--text-muted);">
-            Status: <span style="color: var(--success);">System Ready</span>
-        </div>
-    </div>
+    <canvas id="particle-canvas"></canvas>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <h1>Scenario Intelligence Engine</h1>
-            <p>Select a simulation case to compute real-time decision recommendations.</p>
+    <header>
+        <div class="brand">
+            <span>⚡ NEXUS-X // ENGINE</span>
         </div>
+        <div class="status-pill">
+            <div class="pulse-dot"></div>
+            <span>SIMULATION ENGINE ONLINE</span>
+        </div>
+    </header>
 
-        <!-- Left Panel: Select Scenario -->
+    <div class="grid-container">
+        <!-- Panel 1: Scenarios -->
         <div class="panel">
-            <div class="panel-title">
-                <span>Select Simulation Scenario</span>
+            <div class="panel-header">
+                <span>Scenario Models</span>
             </div>
-
-            <div class="scenario-card active" onclick="loadScenario(1, this)">
-                <h4>Scenario A: High Load / Resource Constraint</h4>
-                <p>Simulates peak capacity strain and calculates automated load shedding priority.</p>
-            </div>
-
-            <div class="scenario-card" onclick="loadScenario(2, this)">
-                <h4>Scenario B: Risk Mitigation & Contingency</h4>
-                <p>Evaluates secondary protocol deployment under unexpected variance.</p>
-            </div>
-
-            <div class="scenario-card" onclick="loadScenario(3, this)">
-                <h4>Scenario C: Optimization & Efficiency Pass</h4>
-                <p>Executes automated resource reallocation to maximize throughput.</p>
-            </div>
-        </div>
-
-        <!-- Right Panel: Live Results -->
-        <div class="panel">
-            <div class="panel-title">
-                <span>Real-Time AI Evaluation</span>
-                <span class="badge" id="status-tag">ACTIVE</span>
-            </div>
-
-            <div class="metric-grid">
-                <div class="metric-box">
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">CONFIDENCE SCORE</div>
-                    <div class="metric-value" id="confidence-score">94.2%</div>
+            <div id="scenarios-list">
+                <div class="scenario-card active" onclick="switchScenario(0, this)">
+                    <div class="scenario-title">Scenario A: High Capacity Stress</div>
+                    <div class="scenario-desc">Simulates system load spikes and evaluates automated balance cycles.</div>
                 </div>
-                <div class="metric-box">
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">RISK RATING</div>
-                    <div class="metric-value" id="risk-rating" style="color: var(--success);">LOW</div>
+                <div class="scenario-card" onclick="switchScenario(1, this)">
+                    <div class="scenario-title">Scenario B: Risk Mitigation Pass</div>
+                    <div class="scenario-desc">Evaluates secondary protocol deployment under sudden variance.</div>
+                </div>
+                <div class="scenario-card" onclick="switchScenario(2, this)">
+                    <div class="scenario-title">Scenario C: Efficiency Optimization</div>
+                    <div class="scenario-desc">Reallocates dynamic resources to maximize output performance.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 2: Live Graph & Analytics -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Real-Time Predictive Telemetry</span>
+                <span id="scenario-tag" style="color: var(--accent-cyan); font-weight: 600;">[SCENARIO A]</span>
+            </div>
+
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="metric-label">Confidence</div>
+                    <div class="metric-value" id="val-confidence">96.4%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Risk Rating</div>
+                    <div class="metric-value" id="val-risk" style="color: var(--success);">LOW</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Latency Impact</div>
+                    <div class="metric-value" id="val-latency">14ms</div>
                 </div>
             </div>
 
-            <div class="panel-title" style="font-size: 0.9rem; margin-bottom: 8px;">Recommendation Log</div>
-            <div class="output-log" id="log-output">
-                > Initializing model evaluation...<br>
-                > Scenario A loaded.<br>
-                > Analyzing constraints: Nominal.<br>
-                > Recommended Action: Execute automated balance cycle.
+            <div class="chart-container">
+                <canvas id="telemetryChart"></canvas>
             </div>
 
-            <button class="btn-action" onclick="runSimulation()">Run Full Simulation</button>
+            <div class="panel-header" style="margin-bottom: 8px;">Decision & Execution Stream</div>
+            <div class="terminal" id="terminal-log">
+                <div class="terminal-line">> System initialized. Telemetry stream locked.</div>
+                <div class="terminal-line">> Waiting for scenario command input...</div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Controls -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Interactive Controls</span>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Stress Level Impact</span>
+                    <span id="slider-val">50%</span>
+                </div>
+                <input type="range" id="stress-slider" min="10" max="100" value="50" oninput="updateStress(this.value)">
+            </div>
+
+            <button class="btn btn-primary" onclick="runSimulation()">RUN LIVE SIMULATION</button>
+            <button class="btn btn-danger" onclick="triggerOverride()">TRIGGER OVERRIDE</button>
         </div>
     </div>
 
     <script>
-        const scenarios = {
-            1: {
-                confidence: "94.2%",
+        // Audio Synthesizer for Wow Factor Sound FX
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, type="sine", duration=0.1) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        // Particle Background
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        for(let i=0; i<40; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.5 + 0.5,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(0, 242, 254, 0.2)";
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+
+        // Data & Chart Setup
+        const scenarioData = [
+            {
+                tag: "[SCENARIO A: CAPACITY STRESS]",
+                confidence: "96.4%",
                 risk: "LOW",
                 riskColor: "var(--success)",
+                latency: "14ms",
+                chartData: [20, 45, 30, 80, 60, 95, 40],
                 logs: [
-                    "> Initializing Scenario A evaluation...",
-                    "> Analyzing capacity constraints...",
-                    "> System Load: 88% capacity detected.",
-                    "> Optimal Action: Re-route secondary processes to standby nodes.",
-                    "> Predicted Recovery Time: < 120ms."
+                    "> Loaded Scenario A model parameters.",
+                    "> System Load Capacity analyzed: Stable.",
+                    "> Recommendation: Deploy automated dynamic balancing."
                 ]
             },
-            2: {
-                confidence: "81.7%",
+            {
+                tag: "[SCENARIO B: RISK MITIGATION]",
+                confidence: "82.1%",
                 risk: "MEDIUM",
                 riskColor: "var(--warning)",
+                latency: "38ms",
+                chartData: [40, 65, 85, 50, 90, 75, 60],
                 logs: [
-                    "> Initializing Scenario B evaluation...",
-                    "> Anomaly detected in primary pipeline.",
-                    "> Evaluating secondary fallback protocols...",
-                    "> Optimal Action: Trigger contingency threshold sub-routine.",
-                    "> Alert dispatched to oversight queue."
+                    "> Loaded Scenario B model parameters.",
+                    "> Anomaly variance threshold hit: 18%.",
+                    "> Recommendation: Activate contingency routing."
                 ]
             },
-            3: {
-                confidence: "98.5%",
+            {
+                tag: "[SCENARIO C: OPTIMIZATION]",
+                confidence: "99.1%",
                 risk: "OPTIMAL",
-                riskColor: "var(--accent)",
+                riskColor: "var(--accent-cyan)",
+                latency: "8ms",
+                chartData: [10, 25, 35, 40, 50, 70, 95],
                 logs: [
-                    "> Initializing Scenario C evaluation...",
-                    "> Scanning idle throughput capacity...",
-                    "> Efficiency baseline: +24.6% improvement potential.",
-                    "> Optimal Action: Reallocate core instances for peak performance."
+                    "> Loaded Scenario C model parameters.",
+                    "> Throughput efficiency baseline evaluated.",
+                    "> Recommendation: Reallocate idle nodes to core engine."
                 ]
             }
-        };
+        ];
 
-        function loadScenario(id, element) {
-            document.querySelectorAll('.scenario-card').forEach(card => card.classList.remove('active'));
+        let currentScenario = 0;
+        const chartCtx = document.getElementById('telemetryChart').getContext('2d');
+        const telemetryChart = new Chart(chartCtx, {
+            type: 'line',
+            data: {
+                labels: ['T-6', 'T-5', 'T-4', 'T-3', 'T-2', 'T-1', 'Now'],
+                datasets: [{
+                    label: 'Performance Telemetry',
+                    data: scenarioData[0].chartData,
+                    borderColor: '#00f2fe',
+                    backgroundColor: 'rgba(0, 242, 254, 0.08)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+
+        // Interactivity Functions
+        function switchScenario(index, element) {
+            playSound(440, "sine", 0.08);
+            document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
             element.classList.add('active');
-
-            const data = scenarios[id];
-            document.getElementById('confidence-score').innerText = data.confidence;
-            document.getElementById('risk-rating').innerText = data.risk;
-            document.getElementById('risk-rating').style.color = data.riskColor;
             
-            document.getElementById('log-output').innerHTML = data.logs.join('<br>');
+            currentScenario = index;
+            const data = scenarioData[index];
+
+            document.getElementById('scenario-tag').innerText = data.tag;
+            document.getElementById('val-confidence').innerText = data.confidence;
+            document.getElementById('val-risk').innerText = data.risk;
+            document.getElementById('val-risk').style.color = data.riskColor;
+            document.getElementById('val-latency').innerText = data.latency;
+
+            telemetryChart.data.datasets[0].data = data.chartData;
+            telemetryChart.update();
+
+            const terminal = document.getElementById('terminal-log');
+            data.logs.forEach(log => {
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                line.innerText = log;
+                terminal.appendChild(line);
+            });
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateStress(val) {
+            document.getElementById('slider-val').innerText = val + '%';
+            telemetryChart.data.datasets[0].data = telemetryChart.data.datasets[0].data.map(v => Math.min(100, Math.max(10, v + (val - 50) / 5)));
+            telemetryChart.update();
         }
 
         function runSimulation() {
-            const output = document.getElementById('log-output');
-            output.innerHTML += "<br><span style='color: var(--accent);'>[LIVE RUN] Simulation executed successfully. State verified.</span>";
+            playSound(880, "triangle", 0.15);
+            const terminal = document.getElementById('terminal-log');
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.style.color = '#00f5d4';
+            line.innerText = `> [SIMULATION RUN] Processing parameters... State Verified OK.`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function triggerOverride() {
+            playSound(150, "sawtooth", 0.3);
+            const terminal = document.getElementById('terminal-log');
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.style.color = '#ff0055';
+            line.innerText = `> [EMERGENCY OVERRIDE] Threshold bypassed. Manual control locked.`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
         }
     </script>
 </body>
