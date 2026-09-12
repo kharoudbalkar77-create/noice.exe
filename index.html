@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>noice.exe // Autonomous Scenario & Intelligence Engine</title>
-    <!-- Chart.js CDN for live graphs -->
+    <title>noice.exe // Identity & Fraud Intelligence Engine</title>
+    <!-- Chart.js CDN for live telemetry -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-dark: #07090e;
-            --panel-bg: rgba(18, 24, 38, 0.8);
+            --panel-bg: rgba(18, 24, 38, 0.82);
             --accent-cyan: #00f2fe;
             --accent-glow: rgba(0, 242, 254, 0.35);
             --accent-purple: #7928ca;
@@ -38,7 +38,7 @@
             flex-direction: column;
         }
 
-        /* Canvas Background */
+        /* Canvas Particle Background */
         #particle-canvas {
             position: absolute;
             top: 0;
@@ -113,13 +113,13 @@
             100% { transform: scale(0.95); opacity: 0.8; }
         }
 
-        /* Grid Layout */
+        /* Main Workspace Grid */
         .grid-container {
             position: relative;
             z-index: 10;
             flex: 1;
             display: grid;
-            grid-template-columns: 340px 1fr 340px;
+            grid-template-columns: 350px 1fr 340px;
             gap: 16px;
             padding: 16px;
             overflow: hidden;
@@ -148,42 +148,62 @@
             justify-content: space-between;
         }
 
-        /* Modules / Scenarios */
-        .module-card {
+        /* Identity Document Card Mockup */
+        .doc-preview {
             background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed var(--accent-cyan);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 14px;
+            position: relative;
+            text-align: center;
+        }
+
+        .doc-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
         }
 
-        .module-card:hover {
-            border-color: var(--accent-cyan);
-            background: rgba(0, 242, 254, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .module-card.active {
-            border-color: var(--accent-cyan);
-            background: rgba(0, 242, 254, 0.08);
-            box-shadow: 0 0 16px var(--accent-glow);
-        }
-
-        .module-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #fff;
+        .doc-card-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
         }
 
-        .module-desc {
+        .doc-field {
             font-size: 0.75rem;
             color: var(--text-muted);
-            margin-top: 4px;
+            margin-bottom: 4px;
         }
+
+        .doc-field span {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-pending { background: rgba(255, 183, 3, 0.15); color: var(--warning); border: 1px solid var(--warning); }
+        .badge-verified { background: rgba(0, 245, 212, 0.15); color: var(--success); border: 1px solid var(--success); }
 
         /* Metrics Display */
         .metrics-row {
@@ -209,7 +229,7 @@
         }
 
         .metric-value {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-weight: 800;
             margin-top: 2px;
             color: var(--accent-cyan);
@@ -218,9 +238,9 @@
         /* Chart Canvas */
         .chart-container {
             flex: 1;
-            min-height: 180px;
+            min-height: 170px;
             position: relative;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         /* Terminal Output */
@@ -251,7 +271,7 @@
             border-radius: 6px;
             height: 8px;
             overflow: hidden;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             border: 1px solid var(--border);
         }
 
@@ -262,7 +282,7 @@
             transition: width 0.3s ease;
         }
 
-        /* Interactive Action Buttons */
+        /* Interactive Buttons */
         .btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -347,73 +367,80 @@
     <header>
         <div class="brand">
             <span>noice.exe</span>
-            <span class="brand-badge">CORE v3.0</span>
+            <span class="brand-badge">IDENTITY VERIFIER v3.2</span>
         </div>
         <div class="status-pill">
             <div class="pulse-dot"></div>
-            <span id="system-status">noice.exe PIPELINE READY</span>
+            <span id="system-status">TEAMMATE VERIFICATION TESTBENCH</span>
         </div>
     </header>
 
     <div class="grid-container">
-        <!-- Left Panel: Engine Pipelines -->
+        <!-- Left Panel: Test Case Input (Aadhaar & Teammate Card) -->
         <div class="panel">
             <div class="panel-header">
-                <span>Core Modules</span>
-            </div>
-            
-            <div class="module-card active" onclick="selectModule('ocr', this)">
-                <div class="module-title">
-                    <span>1. Optical Character Recognition</span>
-                    <span style="color: var(--accent-cyan)">[OCR]</span>
-                </div>
-                <div class="module-desc">Extracts structured data and verifies doc authenticity.</div>
+                <span>1. Test Subject & Aadhaar Upload</span>
             </div>
 
-            <div class="module-card" onclick="selectModule('fft', this)">
-                <div class="module-title">
-                    <span>2. FFT Signal Frequency</span>
-                    <span style="color: #c084fc">[FFT]</span>
+            <div class="doc-preview">
+                <div style="font-size: 0.8rem; color: var(--accent-cyan); margin-bottom: 8px; font-weight: 700;">
+                    🪪 TEAMMATE AADHAAR CARD
                 </div>
-                <div class="module-desc">Fast Fourier Transform for spectral noise & fraud analysis.</div>
+                <div class="doc-card">
+                    <div class="doc-card-header">
+                        <span>GOVT OF INDIA // UNIQUE ID</span>
+                        <span class="badge badge-pending" id="badge-ocr">UNVERIFIED</span>
+                    </div>
+                    <div class="doc-field">NAME: <span id="field-name">TEAMMATE_01</span></div>
+                    <div class="doc-field">AADHAAR: <span id="field-id">XXXX-XXXX-9842</span></div>
+                    <div class="doc-field">DOB: <span>14/08/2005</span></div>
+                    <div class="doc-field">QR HASH: <span id="field-hash" style="font-size: 0.65rem; color: var(--accent-cyan);">0x7F8B9A...</span></div>
+                </div>
             </div>
 
-            <div class="module-card" onclick="selectModule('liveness', this)">
-                <div class="module-title">
-                    <span>3. Biometric Liveness Check</span>
-                    <span style="color: var(--success)">[LIVENESS]</span>
-                </div>
-                <div class="module-desc">Facial landmark depth mapping & anti-spoofing detector.</div>
+            <div class="panel-header">
+                <span>Verification Checklist</span>
             </div>
 
-            <div class="module-card" onclick="selectModule('elf', this)">
-                <div class="module-title">
-                    <span>4. ELF Binary Inspection</span>
-                    <span style="color: var(--warning)">[ELF]</span>
+            <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>OCR Document Extraction</span>
+                    <span id="chk-ocr" style="color: var(--warning);">[PENDING]</span>
                 </div>
-                <div class="module-desc">Parses Executable & Linkable Format headers & sections.</div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>FFT Audio/Spectral Noise Pass</span>
+                    <span id="chk-fft" style="color: var(--warning);">[PENDING]</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Facial Liveness Depth Check</span>
+                    <span id="chk-live" style="color: var(--warning);">[PENDING]</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>ELF Security / App Integrity</span>
+                    <span id="chk-elf" style="color: var(--warning);">[PENDING]</span>
+                </div>
             </div>
         </div>
 
-        <!-- Center Panel: Telemetry & Visual Graph -->
+        <!-- Center Panel: Live Telemetry & Execution Stream -->
         <div class="panel">
             <div class="panel-header">
-                <span>Live Predictive Telemetry</span>
-                <span id="active-tag" style="color: var(--accent-cyan); font-weight: 600;">[OCR ENGINE]</span>
+                <span>2. Verification Telemetry</span>
+                <span id="active-tag" style="color: var(--accent-cyan); font-weight: 600;">[ID: TEAMMATE_01]</span>
             </div>
 
             <div class="metrics-row">
                 <div class="metric-card">
-                    <div class="metric-label">Confidence</div>
-                    <div class="metric-value" id="val-confidence">98.2%</div>
+                    <div class="metric-label">Aadhaar OCR Match</div>
+                    <div class="metric-value" id="val-confidence">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Risk Score</div>
-                    <div class="metric-value" id="val-risk" style="color: var(--success);">LOW</div>
+                    <div class="metric-label">Liveness Confidence</div>
+                    <div class="metric-value" id="val-liveness" style="color: var(--warning);">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Processing Time</div>
-                    <div class="metric-value" id="val-latency">12ms</div>
+                    <div class="metric-label">Fraud Probability</div>
+                    <div class="metric-value" id="val-risk" style="color: var(--success);">0%</div>
                 </div>
             </div>
 
@@ -426,34 +453,34 @@
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
 
-            <div class="panel-header" style="margin-bottom: 6px;">noice.exe Terminal Stream</div>
+            <div class="panel-header" style="margin-bottom: 6px;">noice.exe Terminal Log</div>
             <div class="terminal" id="terminal-log">
-                <div class="terminal-line">> [noice.exe] System initialized. Interactive modules attached.</div>
-                <div class="terminal-line">> Select a module or trigger actions to test pipeline execution.</div>
+                <div class="terminal-line">> [noice.exe] Identity verification pipeline ready.</div>
+                <div class="terminal-line">> Awaiting Teammate Aadhaar scan & live biometric trigger...</div>
             </div>
         </div>
 
-        <!-- Right Panel: Interactive Actions -->
+        <!-- Right Panel: Interactive Triggers -->
         <div class="panel">
             <div class="panel-header">
-                <span>Interactive Triggers</span>
+                <span>3. Manual Step Controls</span>
             </div>
 
             <div class="btn-grid">
-                <button class="btn btn-cyan" onclick="runOCR()">EXECUTE OCR</button>
-                <button class="btn btn-purple" onclick="runFFT()">RUN FFT SPECTRUM</button>
-                <button class="btn btn-cyan" onclick="runLiveness()">CHECK LIVENESS</button>
-                <button class="btn btn-purple" onclick="parseELF()">PARSE ELF HEADER</button>
+                <button class="btn btn-cyan" onclick="runOCR()">1. SCAN AADHAAR OCR</button>
+                <button class="btn btn-purple" onclick="runFFT()">2. RUN FFT AUDIO PASS</button>
+                <button class="btn btn-cyan" onclick="runLiveness()">3. CHECK LIVENESS</button>
+                <button class="btn btn-purple" onclick="parseELF()">4. INSPECT ELF BINARY</button>
             </div>
 
             <div style="border-top: 1px solid var(--border); margin: 12px 0;"></div>
 
             <div class="panel-header">
-                <span>Global Engine Control</span>
+                <span>Automated Demo Mode</span>
             </div>
 
-            <button class="btn btn-primary" onclick="runFullPipeline()">RUN FULL PIPELINE</button>
-            <button class="btn btn-danger" onclick="triggerSecurityOverride()">SECURITY OVERRIDE</button>
+            <button class="btn btn-primary" onclick="runFullPipeline()">VERIFY TEAMMATE (FULL AUTO)</button>
+            <button class="btn btn-danger" onclick="triggerSpoofAlert()">SIMULATE SPOOF / DEEPFAKE</button>
         </div>
     </div>
 
@@ -475,7 +502,7 @@
             } catch(e){}
         }
 
-        // Canvas Particles
+        // Particle Background
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -513,51 +540,15 @@
         }
         drawParticles();
 
-        // Data for Modules
-        const modulePresets = {
-            ocr: {
-                tag: "[OCR ENGINE] via noice.exe",
-                confidence: "98.2%",
-                risk: "LOW",
-                riskColor: "var(--success)",
-                latency: "12ms",
-                chartData: [30, 75, 45, 90, 85, 95, 60]
-            },
-            fft: {
-                tag: "[FFT FREQUENCY ANALYZER]",
-                confidence: "94.7%",
-                risk: "STABLE",
-                riskColor: "var(--accent-cyan)",
-                latency: "8ms",
-                chartData: [15, 80, 20, 95, 10, 85, 30]
-            },
-            liveness: {
-                tag: "[BIOMETRIC LIVENESS DETECTOR]",
-                confidence: "99.4%",
-                risk: "VERIFIED",
-                riskColor: "var(--success)",
-                latency: "18ms",
-                chartData: [50, 60, 70, 85, 90, 98, 99]
-            },
-            elf: {
-                tag: "[ELF BINARY PARSER]",
-                confidence: "100%",
-                risk: "CLEAN",
-                riskColor: "var(--accent-cyan)",
-                latency: "4ms",
-                chartData: [88, 88, 90, 85, 92, 90, 95]
-            }
-        };
-
         // Chart Setup
         const chartCtx = document.getElementById('telemetryChart').getContext('2d');
         const telemetryChart = new Chart(chartCtx, {
             type: 'line',
             data: {
-                labels: ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4', 'Stage 5', 'Stage 6', 'Output'],
+                labels: ['Upload', 'OCR', 'FFT Spectral', 'Biometrics', 'ELF Sec', 'Verified'],
                 datasets: [{
-                    label: 'Signal Amplitude / Data Telemetry',
-                    data: modulePresets.ocr.chartData,
+                    label: 'Verification Confidence Telemetry',
+                    data: [10, 20, 20, 20, 20, 20],
                     borderColor: '#00f2fe',
                     backgroundColor: 'rgba(0, 242, 254, 0.08)',
                     borderWidth: 2,
@@ -591,87 +582,75 @@
             document.getElementById('progress-bar').style.width = percent + '%';
         }
 
-        function selectModule(key, element) {
-            playSound(440, "sine", 0.08);
-            document.querySelectorAll('.module-card').forEach(c => c.classList.remove('active'));
-            element.classList.add('active');
-
-            const preset = modulePresets[key];
-            document.getElementById('active-tag').innerText = preset.tag;
-            document.getElementById('val-confidence').innerText = preset.confidence;
-            document.getElementById('val-risk').innerText = preset.risk;
-            document.getElementById('val-risk').style.color = preset.riskColor;
-            document.getElementById('val-latency').innerText = preset.latency;
-
-            telemetryChart.data.datasets[0].data = preset.chartData;
-            telemetryChart.update();
-
-            logToTerminal(`> Switched focus to ${preset.tag}`);
-        }
-
-        // Interactive Feature Functions
+        // Test Case Feature Triggers
         function runOCR() {
             playSound(600, "triangle", 0.12);
-            setProgress(30);
-            logToTerminal(`> [OCR] Scanning input document matrix...`, "#00f2fe");
+            setProgress(25);
+            logToTerminal(`> [OCR] Scanning Aadhaar image matrix...`, "#00f2fe");
             setTimeout(() => {
-                setProgress(80);
-                logToTerminal(`> [OCR] Text blocks isolated. Applying binarization filter...`);
-            }, 300);
-            setTimeout(() => {
-                setProgress(100);
-                logToTerminal(`> [OCR] SUCCESS: Extracted Key Tokens [ID_HASH: 0x9F4A, STATUS: AUTHENTIC]`, "#00f5d4");
-            }, 600);
+                document.getElementById('val-confidence').innerText = "98.7%";
+                document.getElementById('chk-ocr').innerText = "[PASSED]";
+                document.getElementById('chk-ocr').style.color = "var(--success)";
+                document.getElementById('badge-ocr').innerText = "OCR VERIFIED";
+                document.getElementById('badge-ocr').className = "badge badge-verified";
+                
+                telemetryChart.data.datasets[0].data[1] = 98;
+                telemetryChart.update();
+                
+                logToTerminal(`> [OCR] MATCH SUCCESS: Name, Aadhaar Number, and QR Hash extracted.`, "#00f5d4");
+            }, 500);
         }
 
         function runFFT() {
             playSound(520, "sine", 0.15);
-            setProgress(25);
-            logToTerminal(`> [FFT] Sampling signal input at 44.1kHz...`, "#c084fc");
+            setProgress(50);
+            logToTerminal(`> [FFT] Analyzing ambient spectral audio frequencies...`, "#c084fc");
             setTimeout(() => {
-                setProgress(70);
-                telemetryChart.data.datasets[0].data = [10, 95, 5, 88, 12, 92, 18];
+                document.getElementById('chk-fft').innerText = "[PASSED]";
+                document.getElementById('chk-fft').style.color = "var(--success)";
+                
+                telemetryChart.data.datasets[0].data[2] = 95;
                 telemetryChart.update();
-                logToTerminal(`> [FFT] Frequency spectrum transformed. Harmonic peak: 1.2 kHz.`);
-            }, 350);
-            setTimeout(() => {
-                setProgress(100);
-                logToTerminal(`> [FFT] SUCCESS: No synthetic noise anomalies detected.`, "#00f5d4");
-            }, 700);
+                
+                logToTerminal(`> [FFT] Harmonic acoustic response clean. No synthetic playback detected.`, "#00f5d4");
+            }, 500);
         }
 
         function runLiveness() {
             playSound(700, "sine", 0.1);
-            setProgress(40);
-            logToTerminal(`> [LIVENESS] Mapping 68 facial landmark coordinates...`, "#00f5d4");
+            setProgress(75);
+            logToTerminal(`> [LIVENESS] Mapping 3D facial landmark depth & blink frequency...`, "#00f5d4");
             setTimeout(() => {
-                setProgress(85);
-                logToTerminal(`> [LIVENESS] Micro-expression & depth variance confirmed...`);
-            }, 400);
-            setTimeout(() => {
-                setProgress(100);
-                logToTerminal(`> [LIVENESS] SUCCESS: Real human live presence verified (99.4%)`, "#00f5d4");
-            }, 750);
+                document.getElementById('val-liveness').innerText = "99.2%";
+                document.getElementById('val-liveness').style.color = "var(--success)";
+                document.getElementById('chk-live').innerText = "[PASSED]";
+                document.getElementById('chk-live').style.color = "var(--success)";
+                
+                telemetryChart.data.datasets[0].data[3] = 99;
+                telemetryChart.update();
+                
+                logToTerminal(`> [LIVENESS] SUCCESS: Real physical teammate confirmed live (99.2%).`, "#00f5d4");
+            }, 600);
         }
 
         function parseELF() {
             playSound(350, "square", 0.1);
-            setProgress(35);
-            logToTerminal(`> [ELF] Reading binary header magic bytes [0x7F 'E' 'L' 'F']...`, "#ffb703");
+            setProgress(90);
+            logToTerminal(`> [ELF] Checking app executable headers & cryptographic signature...`, "#ffb703");
             setTimeout(() => {
-                setProgress(75);
-                logToTerminal(`> [ELF] Class: ELF64 | Machine: x86-64 | Sections: .text, .rodata, .bss parsed.`);
-            }, 350);
-            setTimeout(() => {
-                setProgress(100);
-                logToTerminal(`> [ELF] SUCCESS: Binary structure intact. No payload tampering detected.`, "#00f5d4");
-            }, 650);
+                document.getElementById('chk-elf').innerText = "[PASSED]";
+                document.getElementById('chk-elf').style.color = "var(--success)";
+                
+                telemetryChart.data.datasets[0].data[4] = 100;
+                telemetryChart.update();
+                
+                logToTerminal(`> [ELF] SUCCESS: ELF64 binary integrity intact. Zero injection found.`, "#00f5d4");
+            }, 500);
         }
 
         function runFullPipeline() {
             playSound(880, "triangle", 0.2);
-            logToTerminal(`> [noice.exe PIPELINE] Initiating end-to-end execution...`, "#00f2fe");
-            setProgress(10);
+            logToTerminal(`> [noice.exe DEMO] Starting complete identity validation sequence...`, "#00f2fe");
             
             setTimeout(() => { runOCR(); }, 200);
             setTimeout(() => { runFFT(); }, 900);
@@ -679,16 +658,28 @@
             setTimeout(() => { parseELF(); }, 2300);
             
             setTimeout(() => {
-                logToTerminal(`> [noice.exe PIPELINE] ALL MODULES EXECUTED SUCCESSFULLY. RESULT: VALIDATED.`, "#00f5d4");
-            }, 3100);
+                setProgress(100);
+                telemetryChart.data.datasets[0].data[5] = 100;
+                telemetryChart.update();
+                
+                document.getElementById('system-status').innerText = "TEAMMATE VERIFIED ✅";
+                document.getElementById('system-status').style.color = "var(--success)";
+                logToTerminal(`> [noice.exe RESULT] TEAMMATE IS 100% REAL. IDENTITY & BIOMETRICS AUTHENTICATED.`, "#00f5d4");
+            }, 3000);
         }
 
-        function triggerSecurityOverride() {
+        function triggerSpoofAlert() {
             playSound(180, "sawtooth", 0.35);
             setProgress(100);
-            logToTerminal(`> [noice.exe OVERRIDE] EMERGENCY LOCKDOWN TRIGGERED!`, "#ff0055");
-            logToTerminal(`> Threat mitigation sub-routines engaged on all channels.`, "#ff0055");
-            document.getElementById('system-status').innerText = "OVERRIDE ENGAGED";
+            document.getElementById('val-risk').innerText = "94.8%";
+            document.getElementById('val-risk').style.color = "var(--danger)";
+            document.getElementById('chk-live').innerText = "[FAILED]";
+            document.getElementById('chk-live').style.color = "var(--danger)";
+            
+            logToTerminal(`> [ALERT] DEEPFAKE / SCREEN REPLAY DETECTED IN LIVENESS SCAN!`, "#ff0055");
+            logToTerminal(`> Fraud Probability spiked to 94.8%. Identity rejected.`, "#ff0055");
+            
+            document.getElementById('system-status').innerText = "FRAUD / SPOOF DETECTED";
             document.getElementById('system-status').style.color = "var(--danger)";
         }
     </script>
